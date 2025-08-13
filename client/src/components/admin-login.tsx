@@ -30,17 +30,27 @@ export function AdminLogin() {
 
   const onSubmit = async (data: LoginForm) => {
     try {
-      await login(data.password);
-      toast({
-        title: "Login Successful",
-        description: "Welcome to the Register Path admin dashboard.",
+      const result = await new Promise<void>((resolve, reject) => {
+        login(data.password, {
+          onSuccess: () => {
+            toast({
+              title: "Login Successful",
+              description: "Welcome to the Register Path admin dashboard.",
+            });
+            resolve();
+          },
+          onError: (error: any) => {
+            toast({
+              title: "Login Failed",
+              description: error.message || "Invalid password",
+              variant: "destructive",
+            });
+            reject(error);
+          }
+        });
       });
-    } catch (error: any) {
-      toast({
-        title: "Login Failed",
-        description: error.message || "Invalid password",
-        variant: "destructive",
-      });
+    } catch (error) {
+      // Error already handled in onError callback
     }
   };
 
