@@ -1,0 +1,86 @@
+Prompt for Replit AI — Register Path: Library Events App with Payments, QR Tickets, and Sessions
+
+You are generating a complete web app for a public library. The app’s brand is Register Path (two words). Use this name in the site header, footer, email templates, and admin dashboard. Pick any tech stack that runs easily on Replit and supports a server, persistent database, email sending, payment processing, background jobs, and QR code generation.
+
+Goal
+
+A production-ready events system where library staff create events with room/session sub-events, patrons register and pay (when required), receive QR-coded tickets, and staff check in attendees by scanning QR codes. System must enforce capacities (event and session level), handle waitlists, and send branded confirmation/reminder emails.
+
+Branding & Design
+	•	Display the name Register Path in the top navigation, footer, and admin dashboard header.
+	•	Use a clean, library-friendly, accessible design (white background, accent color #004080 or similar deep blue).
+	•	Email subject lines and body text must include “Register Path” where appropriate (“Your Register Path Confirmation”).
+	•	Include a small Register Path text logo in the corner of the QR ticket PDFs or HTML ticket pages.
+
+Core Modules
+	1.	Events & Sessions
+	•	Parent Event → multiple Sessions (different rooms/times).
+	•	Fields:
+	•	Event: title, description, location, start/end times, status (draft/published), hero image optional.
+	•	Session: event_id, title, room, start/end times, capacity, remaining, price (0 for free), allow_waitlist, status.
+	•	Sessions shown on event detail; user selects one session to register.
+	2.	Public Experience
+	•	Home page: List upcoming published events, show sessions inline.
+	•	Event detail: Session picker with capacity/price; signup form.
+	•	Success page: Branded confirmation message, QR ticket download/print link.
+	•	Handle full sessions with waitlist option or error message.
+	3.	Registration Logic
+	•	Atomic capacity check at session level.
+	•	Free sessions: confirm immediately, decrement remaining, issue tickets.
+	•	Paid sessions: create payment intent, confirm via webhook, then decrement remaining and issue tickets.
+	•	Waitlist if full and allowed; admin can promote to confirmed.
+	4.	Payments
+	•	Default: Stripe Checkout/Payment Intents (but code in a provider-agnostic way).
+	•	Amount = session price × seats.
+	•	Secure webhook endpoint for payment confirmation.
+	5.	QR Tickets & Check-In
+	•	Generate unique ticket code per seat; QR encodes a secure URL or token.
+	•	Email includes inline QR and a “View Ticket” link.
+	•	Check-in page with camera scanner + manual lookup; prevent duplicate scans.
+	•	QR ticket view page includes Register Path branding.
+	6.	Emails
+	•	Branded HTML + text emails.
+	•	Confirmation email: event/session details, QR ticket(s).
+	•	Reminder email: sent 24h before session start, includes QR code again.
+	•	Support SMTP or API; dev mode logs emails to console.
+	7.	Admin
+	•	Single ENV password.
+	•	CRUD for events/sessions.
+	•	View/export registrations per session (CSV).
+	•	Promote waitlist → confirmed.
+	•	Refund/cancel registrations.
+	•	Manual check-in by ticket code or attendee name.
+	8.	Accessibility & UX
+	•	Semantic HTML, ARIA roles, responsive layout.
+	•	Server-side form validation with clear branded error messages.
+
+Data Model (adapt to chosen DB)
+	•	events
+	•	sessions
+	•	registrations
+	•	tickets
+	•	payments
+	•	Use indexes for performance on lookups by event/session.
+
+Background Jobs
+	•	Every 10 min: send branded reminder emails for confirmed tickets starting in ~24h.
+
+Environment Variables
+	•	ADMIN_PASSWORD
+	•	BASE_URL
+	•	Email creds
+	•	Payment creds (Stripe keys)
+	•	MAIL_FROM="Register Path <noreply@yourlib.org>"
+
+Deliverables
+	•	Complete, runnable Replit project.
+	•	Branded CSS + templates with Register Path.
+	•	README with setup/run instructions for Replit and branding notes.
+	•	Seed data: one published free session, one published paid session, one draft event.
+
+Acceptance Criteria
+	•	All emails, tickets, and UI use Register Path branding.
+	•	Capacity enforcement works at the session level.
+	•	Paid and free flows both issue QR tickets.
+	•	Check-in scanner works on mobile and desktop.
+	•	CSV exports open in Excel/Sheets.
