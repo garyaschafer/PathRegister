@@ -130,10 +130,31 @@ export function RegistrationModal({ open, onClose, eventId, onSuccess }: Registr
     }
   };
 
-  if (!event && !isLoading) return null;
+  if (!open) return null;
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="library-modal-content max-w-2xl">
+          <div className="flex items-center justify-center p-8">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+  if (!event) return null;
 
-  const eventPrice = event && event.price ? parseFloat(event.price.toString()) : 0;
-  const totalCost = eventPrice * (form.watch("seats") || 1);
+  const eventPrice = event?.price ? parseFloat(event.price.toString()) : 0;
+  
+  let seats = 1;
+  try {
+    seats = form.watch("seats") || 1;
+  } catch (e) {
+    console.warn("Form watch error:", e);
+    seats = 1;
+  }
+  
+  const totalCost = eventPrice * seats;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -218,10 +239,13 @@ export function RegistrationModal({ open, onClose, eventId, onSuccess }: Registr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Number of Seats</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString() || "1"}>
+                  <Select 
+                    onValueChange={(value) => field.onChange(parseInt(value, 10))} 
+                    value={field.value ? field.value.toString() : "1"}
+                  >
                     <FormControl>
                       <SelectTrigger data-testid="select-seats">
-                        <SelectValue placeholder="Select number of seats" />
+                        <SelectValue />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
