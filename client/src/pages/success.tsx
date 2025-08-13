@@ -12,10 +12,9 @@ export default function Success() {
   const [ticketCode, setTicketCode] = useState<string | null>(null);
 
   useEffect(() => {
-    // In a real app, this would come from URL params or local storage
-    // For demo purposes, we'll simulate a ticket code
+    // Get ticket code from URL params
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('ticket') || 'RP-' + Date.now().toString(36).toUpperCase();
+    const code = urlParams.get('ticket');
     setTicketCode(code);
   }, []);
 
@@ -64,6 +63,18 @@ export default function Success() {
           {ticketCode && (
             <div className="mt-8">
               <QRTicket ticketCode={ticketCode} />
+            </div>
+          )}
+          
+          {!ticketCode && (
+            <div className="mt-8">
+              <Card className="library-card">
+                <CardContent className="p-6 text-center">
+                  <p className="text-muted-foreground">
+                    Your ticket details have been sent to your email address.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>

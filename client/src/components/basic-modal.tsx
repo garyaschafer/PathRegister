@@ -49,6 +49,14 @@ export function BasicModal({ open, onClose, eventId, onSuccess }: BasicModalProp
         description: "You have been registered for the event!",
       });
       onClose();
+      
+      // Redirect to success page with ticket code
+      if (data.tickets && data.tickets.length > 0) {
+        window.location.href = `/success?ticket=${data.tickets[0].ticketCode}`;
+      } else {
+        window.location.href = `/success`;
+      }
+      
       onSuccess(data);
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
     },
