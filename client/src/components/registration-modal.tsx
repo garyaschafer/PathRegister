@@ -245,11 +245,7 @@ export function RegistrationModal({ open, onClose, eventId, onSuccess }: Registr
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      I agree to the{" "}
-                      <a href="#" className="text-primary hover:underline">
-                        terms and conditions
-                      </a>{" "}
-                      *
+                      I agree to the terms and conditions *
                     </FormLabel>
                   </div>
                 </FormItem>

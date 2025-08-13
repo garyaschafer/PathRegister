@@ -19,10 +19,8 @@ export function Header() {
           </Link>
           
           <nav className="hidden md:flex space-x-8">
-            <Link href="/">
-              <a className={`library-nav-link ${location === '/' ? 'text-primary' : ''}`}>
-                Events
-              </a>
+            <Link href="/" className={`library-nav-link ${location === '/' ? 'text-primary' : ''}`}>
+              Events
             </Link>
             <a href="#about" className="library-nav-link">About</a>
             <a href="#contact" className="library-nav-link">Contact</a>
@@ -49,8 +47,8 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
             <div className="flex flex-col space-y-3">
-              <Link href="/">
-                <a className="library-nav-link py-2">Events</a>
+              <Link href="/" className="library-nav-link py-2">
+                Events
               </Link>
               <a href="#about" className="library-nav-link py-2">About</a>
               <a href="#contact" className="library-nav-link py-2">Contact</a>
