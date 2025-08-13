@@ -31,7 +31,7 @@ export function QRTicket({ ticketCode }: QRTicketProps) {
     );
   }
 
-  const { ticket, registration, session, event } = ticketData as any;
+  const { ticket, registration, event } = ticketData as any;
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -71,11 +71,11 @@ export function QRTicket({ ticketCode }: QRTicketProps) {
                 <h4 className="font-semibold text-foreground text-lg" data-testid={`text-event-title-${ticket.id}`}>
                   {event.title}
                 </h4>
-                <p className="text-muted-foreground" data-testid={`text-session-details-${ticket.id}`}>
-                  {session.title} - {formatDate(session.startTime)}
+                <p className="text-muted-foreground" data-testid={`text-event-details-${ticket.id}`}>
+                  {formatDate(event.startTime)}
                 </p>
                 <p className="text-muted-foreground">
-                  {formatTime(session.startTime)} - {formatTime(session.endTime)} | {session.room}
+                  {formatTime(event.startTime)} - {formatTime(event.endTime)} | {event.room}
                 </p>
                 <p className="text-sm text-muted-foreground mt-2">
                   Ticket #: <span className="font-mono" data-testid={`text-ticket-code-${ticket.id}`}>{ticket.ticketCode}</span>

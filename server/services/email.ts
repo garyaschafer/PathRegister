@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { type Registration, type Session, type Event, type Ticket } from '@shared/schema';
+import { type Registration, type Event, type Ticket } from '@shared/schema';
 
 interface EmailConfig {
   host: string;
@@ -39,13 +39,12 @@ class EmailService {
 
   async sendConfirmationEmail(
     registration: Registration,
-    session: Session,
     event: Event,
     tickets: Ticket[]
   ): Promise<void> {
     const subject = `Register Path Confirmation - ${event.title}`;
-    const htmlContent = this.generateConfirmationHTML(registration, session, event, tickets);
-    const textContent = this.generateConfirmationText(registration, session, event, tickets);
+    const htmlContent = this.generateConfirmationHTML(registration, event, tickets);
+    const textContent = this.generateConfirmationText(registration, event, tickets);
 
     await this.sendEmail(
       registration.email,
@@ -57,13 +56,12 @@ class EmailService {
 
   async sendReminderEmail(
     registration: Registration,
-    session: Session,
     event: Event,
     tickets: Ticket[]
   ): Promise<void> {
     const subject = `Register Path Reminder - ${event.title} Tomorrow`;
-    const htmlContent = this.generateReminderHTML(registration, session, event, tickets);
-    const textContent = this.generateReminderText(registration, session, event, tickets);
+    const htmlContent = this.generateReminderHTML(registration, event, tickets);
+    const textContent = this.generateReminderText(registration, event, tickets);
 
     await this.sendEmail(
       registration.email,
@@ -107,7 +105,6 @@ class EmailService {
 
   private generateConfirmationHTML(
     registration: Registration,
-    session: Session,
     event: Event,
     tickets: Ticket[]
   ): string {
@@ -143,10 +140,9 @@ class EmailService {
               <div class="ticket-info">
                   <h3>Event Details:</h3>
                   <p><strong>Event:</strong> ${event.title}</p>
-                  <p><strong>Session:</strong> ${session.title}</p>
-                  <p><strong>Date:</strong> ${new Date(session.startTime).toLocaleDateString()}</p>
-                  <p><strong>Time:</strong> ${new Date(session.startTime).toLocaleTimeString()} - ${new Date(session.endTime).toLocaleTimeString()}</p>
-                  <p><strong>Location:</strong> ${session.room}, ${event.location}</p>
+                  <p><strong>Date:</strong> ${new Date(event.startTime).toLocaleDateString()}</p>
+                  <p><strong>Time:</strong> ${new Date(event.startTime).toLocaleTimeString()} - ${new Date(event.endTime).toLocaleTimeString()}</p>
+                  <p><strong>Location:</strong> ${event.room}, ${event.location}</p>
                   <p><strong>Seats:</strong> ${registration.seats}</p>
                   ${Number(registration.totalAmount) > 0 ? `<p><strong>Amount Paid:</strong> $${registration.totalAmount}</p>` : ''}
               </div>
@@ -168,7 +164,6 @@ class EmailService {
 
   private generateConfirmationText(
     registration: Registration,
-    session: Session,
     event: Event,
     tickets: Ticket[]
   ): string {
@@ -183,10 +178,9 @@ Your registration for "${event.title}" has been confirmed.
 
 Event Details:
 - Event: ${event.title}
-- Session: ${session.title}
-- Date: ${new Date(session.startTime).toLocaleDateString()}
-- Time: ${new Date(session.startTime).toLocaleTimeString()} - ${new Date(session.endTime).toLocaleTimeString()}
-- Location: ${session.room}, ${event.location}
+- Date: ${new Date(event.startTime).toLocaleDateString()}
+- Time: ${new Date(event.startTime).toLocaleTimeString()} - ${new Date(event.endTime).toLocaleTimeString()}
+- Location: ${event.room}, ${event.location}
 - Seats: ${registration.seats}
 ${Number(registration.totalAmount) > 0 ? `- Amount Paid: $${registration.totalAmount}` : ''}
 
@@ -201,22 +195,20 @@ Register Path - Library Events System
 
   private generateReminderHTML(
     registration: Registration,
-    session: Session,
     event: Event,
     tickets: Ticket[]
   ): string {
-    return this.generateConfirmationHTML(registration, session, event, tickets)
+    return this.generateConfirmationHTML(registration, event, tickets)
       .replace('Registration Confirmation', 'Event Reminder')
       .replace('Thank you for registering', 'Reminder: Your event is tomorrow');
   }
 
   private generateReminderText(
     registration: Registration,
-    session: Session,
     event: Event,
     tickets: Ticket[]
   ): string {
-    return this.generateConfirmationText(registration, session, event, tickets)
+    return this.generateConfirmationText(registration, event, tickets)
       .replace('Registration Confirmation', 'Event Reminder')
       .replace('Thank you for registering', 'Reminder: Your event is tomorrow');
   }

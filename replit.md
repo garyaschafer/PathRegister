@@ -8,6 +8,7 @@ Register Path is a comprehensive library events management application that enab
 - **Database Migration**: Removed sessions table and moved capacity, room, price, allowWaitlist fields directly to events
 - **Registration Flow**: Users now register directly for events with copy functionality for different times
 - **Copy Feature**: Admin can duplicate events and modify timing/details for recurring events
+- **Session References Cleanup**: Completed comprehensive review and removal of all remaining session references from codebase including QR ticket component, email service, and reminder jobs
 
 # User Preferences
 
@@ -46,9 +47,8 @@ The application uses PostgreSQL with Drizzle ORM:
 
 ## Core Data Models
 
-- **Events**: Parent containers with title, description, location, timing, and publication status
-- **Sessions**: Sub-events within an event containing specific room, capacity, pricing, and waitlist settings
-- **Registrations**: User bookings with personal information, seat counts, and payment status tracking
+- **Events**: Complete event entities with title, description, location, timing, capacity, room, pricing, waitlist settings, and publication status
+- **Registrations**: User bookings linked directly to events with personal information, seat counts, and payment status tracking
 - **Tickets**: Individual QR-coded tickets generated per seat with unique verification codes
 - **Payments**: Stripe payment intent tracking with status management
 

@@ -198,7 +198,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await emailService.sendConfirmationEmail(
           registration,
           event,
-          event,
           tickets
         );
 
@@ -287,7 +286,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send confirmation email
       await emailService.sendConfirmationEmail(
         registration,
-        registration.event,
         registration.event,
         tickets
       );

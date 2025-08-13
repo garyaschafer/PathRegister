@@ -42,7 +42,6 @@ class ReminderService {
         await emailService.sendReminderEmail(
           registration,
           registration.event,
-          registration.event,
           registration.tickets
         );
         console.log(`Reminder sent to ${registration.email} for ${registration.event.title}`);
