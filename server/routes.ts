@@ -439,7 +439,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/events", requireAdmin, async (req, res) => {
     try {
-      const eventData = insertEventSchema.parse(req.body);
+      // Convert date strings to Date objects
+      const body = { ...req.body };
+      if (body.startTime && typeof body.startTime === 'string') {
+        body.startTime = new Date(body.startTime);
+      }
+      if (body.endTime && typeof body.endTime === 'string') {
+        body.endTime = new Date(body.endTime);
+      }
+      
+      const eventData = insertEventSchema.parse(body);
       const event = await storage.createEvent(eventData);
       res.json(event);
     } catch (error: any) {
@@ -475,7 +484,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin sessions management
   app.post("/api/admin/sessions", requireAdmin, async (req, res) => {
     try {
-      const sessionData = insertSessionSchema.parse(req.body);
+      // Convert date strings to Date objects
+      const body = { ...req.body };
+      if (body.startTime && typeof body.startTime === 'string') {
+        body.startTime = new Date(body.startTime);
+      }
+      if (body.endTime && typeof body.endTime === 'string') {
+        body.endTime = new Date(body.endTime);
+      }
+      
+      const sessionData = insertSessionSchema.parse(body);
       const session = await storage.createSession(sessionData);
       res.json(session);
     } catch (error: any) {
