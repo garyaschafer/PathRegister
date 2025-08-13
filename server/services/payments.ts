@@ -2,15 +2,18 @@ import Stripe from 'stripe';
 import { storage } from '../storage';
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required environment variable: STRIPE_SECRET_KEY');
+  console.warn('Stripe secret key not configured. Payment functionality will be disabled.');
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2024-06-20',
+}) : null;
 
 class PaymentService {
   async createPaymentIntent(amount: number, metadata: Record<string, string> = {}): Promise<Stripe.PaymentIntent> {
+    if (!stripe) {
+      throw new Error('Stripe not configured');
+    }
     try {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
@@ -29,6 +32,9 @@ class PaymentService {
   }
 
   async confirmPayment(paymentIntentId: string): Promise<boolean> {
+    if (!stripe) {
+      throw new Error('Stripe not configured');
+    }
     try {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       
@@ -54,6 +60,9 @@ class PaymentService {
   }
 
   async refundPayment(paymentIntentId: string, amount?: number): Promise<Stripe.Refund> {
+    if (!stripe) {
+      throw new Error('Stripe not configured');
+    }
     try {
       const refund = await stripe.refunds.create({
         payment_intent: paymentIntentId,

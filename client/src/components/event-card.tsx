@@ -49,7 +49,7 @@ export function EventCard({ event, onRegister, onJoinWaitlist }: EventCardProps)
             {getEventBadge(event.sessions[0]?.price || "0")}
             <span className="text-sm text-muted-foreground">
               <Calendar className="w-4 h-4 inline mr-1" />
-              {formatDate(event.startTime)}
+              {formatDate(event.startTime.toString())}
             </span>
           </div>
           
@@ -82,7 +82,7 @@ export function EventCard({ event, onRegister, onJoinWaitlist }: EventCardProps)
                       <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mt-1">
                         <span>
                           <Clock className="w-4 h-4 inline mr-1" />
-                          {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                          {formatTime(session.startTime.toString())} - {formatTime(session.endTime.toString())}
                         </span>
                         <span>
                           <MapPin className="w-4 h-4 inline mr-1" />

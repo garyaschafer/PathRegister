@@ -204,7 +204,7 @@ export function AdminEventsTable() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground" data-testid={`text-event-date-${event.id}`}>
-                      {formatDate(event.startTime)}
+                      {formatDate(event.startTime.toString())}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground" data-testid={`text-event-sessions-${event.id}`}>
                       {event.sessions.length}

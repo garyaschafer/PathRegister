@@ -34,7 +34,7 @@ class EmailService {
       return;
     }
 
-    this.transporter = nodemailer.createTransporter(emailConfig);
+    this.transporter = nodemailer.createTransport(emailConfig);
   }
 
   async sendConfirmationEmail(
@@ -148,7 +148,7 @@ class EmailService {
                   <p><strong>Time:</strong> ${new Date(session.startTime).toLocaleTimeString()} - ${new Date(session.endTime).toLocaleTimeString()}</p>
                   <p><strong>Location:</strong> ${session.room}, ${event.location}</p>
                   <p><strong>Seats:</strong> ${registration.seats}</p>
-                  ${registration.totalAmount > 0 ? `<p><strong>Amount Paid:</strong> $${registration.totalAmount}</p>` : ''}
+                  ${Number(registration.totalAmount) > 0 ? `<p><strong>Amount Paid:</strong> $${registration.totalAmount}</p>` : ''}
               </div>
               
               <h3>Your QR Tickets:</h3>
@@ -188,7 +188,7 @@ Event Details:
 - Time: ${new Date(session.startTime).toLocaleTimeString()} - ${new Date(session.endTime).toLocaleTimeString()}
 - Location: ${session.room}, ${event.location}
 - Seats: ${registration.seats}
-${registration.totalAmount > 0 ? `- Amount Paid: $${registration.totalAmount}` : ''}
+${Number(registration.totalAmount) > 0 ? `- Amount Paid: $${registration.totalAmount}` : ''}
 
 Your Ticket Codes: ${ticketCodes}
 

@@ -111,7 +111,7 @@ export function RegistrationModal({ open, onClose, sessionId, onSuccess }: Regis
 
   if (!session && !isLoading) return null;
 
-  const sessionPrice = session ? parseFloat(session.price) : 0;
+  const sessionPrice = session && session.price ? parseFloat(session.price) : 0;
   const totalCost = sessionPrice * (form.watch("seats") || 1);
 
   return (
@@ -126,7 +126,7 @@ export function RegistrationModal({ open, onClose, sessionId, onSuccess }: Regis
           </div>
           {session && (
             <p className="text-muted-foreground">
-              {session.event?.title} - {session.title}
+              {(session as any).event?.title || 'Event'} - {session.title}
             </p>
           )}
         </DialogHeader>

@@ -14,7 +14,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Session storage table for admin authentication
-export const sessions = pgTable(
+export const adminSessions = pgTable(
   "sessions",
   {
     sid: varchar("sid").primaryKey(),

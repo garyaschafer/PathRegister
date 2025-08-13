@@ -102,11 +102,11 @@
   }
 
   .library-button {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-colors;
+    @apply bg-primary text-primary-foreground hover:bg-primary hover:opacity-90 transition-colors;
   }
 
   .library-button-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary hover:opacity-90 transition-colors;
   }
 
   .library-input {

@@ -16,6 +16,13 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 
+// Extend session type to include admin property
+declare module 'express-session' {
+  interface SessionData {
+    isAdmin?: boolean;
+  }
+}
+
 // Admin authentication middleware
 const requireAdmin = (req: any, res: any, next: any) => {
   const adminPassword = process.env.ADMIN_PASSWORD;
@@ -68,7 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: '2023-10-16',
+        apiVersion: '2024-06-20',
       });
       
       const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);

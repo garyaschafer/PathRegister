@@ -21,7 +21,7 @@ export function QRTicket({ ticketCode }: QRTicketProps) {
     );
   }
 
-  if (!ticketData || !ticketData.valid) {
+  if (!ticketData || !(ticketData as any).valid) {
     return (
       <Card className="library-card">
         <CardContent className="p-8 text-center">
@@ -31,7 +31,7 @@ export function QRTicket({ ticketCode }: QRTicketProps) {
     );
   }
 
-  const { ticket, registration, session, event } = ticketData;
+  const { ticket, registration, session, event } = ticketData as any;
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
