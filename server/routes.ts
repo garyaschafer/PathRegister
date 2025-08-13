@@ -371,14 +371,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password } = req.body;
       const adminPassword = process.env.ADMIN_PASSWORD;
 
+      console.log("Login attempt:", {
+        receivedPassword: password ? "***" : "undefined",
+        hasAdminPassword: !!adminPassword,
+        passwordLength: password?.length,
+        adminPasswordLength: adminPassword?.length
+      });
+
       if (!adminPassword) {
         return res.status(500).json({ message: "Admin password not configured" });
       }
 
       if (password === adminPassword) {
         req.session.isAdmin = true;
+        console.log("Admin login successful, session set:", req.session.isAdmin);
         res.json({ success: true, message: "Admin logged in" });
       } else {
+        console.log("Password mismatch");
         res.status(401).json({ message: "Invalid password" });
       }
     } catch (error: any) {
@@ -396,6 +405,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Check admin status
   app.get("/api/admin/status", (req, res) => {
+    console.log("Admin status check:", {
+      hasSession: !!req.session,
+      isAdmin: req.session?.isAdmin,
+      sessionId: req.session?.id
+    });
     res.json({ isAdmin: !!req.session?.isAdmin });
   });
 
