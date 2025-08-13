@@ -9,10 +9,11 @@ Register Path is a comprehensive library events management application that enab
 - **Registration Flow**: Users now register directly for events with copy functionality for different times
 - **Copy Feature**: Admin can duplicate events and modify timing/details for recurring events
 - **Session References Cleanup**: Completed comprehensive review and removal of all remaining session references from codebase including QR ticket component, email service, and reminder jobs
+- **Modal Fix (Aug 13)**: Resolved persistent runtime error by replacing complex Radix/React Hook Form modal with simple HTML-based modal. Registration now works successfully.
 
 # User Preferences
 
-Preferred communication style: Simple, everyday language.
+Preferred communication style: Simple, everyday language. Keep solutions simple - avoid overengineering when a basic approach works.
 
 # System Architecture
 
