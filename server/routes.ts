@@ -113,9 +113,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Register for session
+  // Register for event
   const registerSchema = insertRegistrationSchema.extend({
-    sessionId: z.string(),
+    eventId: z.string(),
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Valid email is required"),
@@ -126,20 +126,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/register", async (req, res) => {
     try {
       const data = registerSchema.parse(req.body);
-      const { sessionId, firstName, lastName, email, phone, seats } = data;
+      const { eventId, firstName, lastName, email, phone, seats } = data;
 
-      // Get session to check availability and price
-      const session = await storage.getSession(sessionId);
-      if (!session) {
-        return res.status(404).json({ message: "Session not found" });
+      // Get event to check availability and price
+      const event = await storage.getEvent(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
       }
 
       // Check capacity
-      if (session.remaining < seats) {
-        if (session.allowWaitlist) {
+      if (event.remaining < seats) {
+        if (event.allowWaitlist) {
           // Create waitlist registration
           const registration = await storage.createRegistration({
-            sessionId,
+            eventId,
             firstName,
             lastName,
             email,
@@ -157,16 +157,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message: "Added to waitlist"
           });
         } else {
-          return res.status(400).json({ message: "Session is full and waitlist not allowed" });
+          return res.status(400).json({ message: "Event is full and waitlist not allowed" });
         }
       }
 
-      const totalAmount = parseFloat(session.price) * seats;
+      const totalAmount = parseFloat(event.price.toString()) * seats;
 
       if (totalAmount === 0) {
         // Free event - confirm immediately
         const registration = await storage.createRegistration({
-          sessionId,
+          eventId,
           firstName,
           lastName,
           email,
@@ -177,8 +177,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paymentStatus: "completed",
         });
 
-        // Update session capacity
-        await storage.updateSessionCapacity(sessionId, session.remaining - seats);
+        // Update event capacity
+        await storage.updateEventCapacity(eventId, event.remaining - seats);
 
         // Generate tickets
         const tickets = [];
@@ -197,8 +197,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Send confirmation email
         await emailService.sendConfirmationEmail(
           registration,
-          session,
-          session.event,
+          event,
+          event,
           tickets
         );
 
@@ -212,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // Paid event - create payment intent
         const registration = await storage.createRegistration({
-          sessionId,
+          eventId,
           firstName,
           lastName,
           email,
@@ -225,8 +225,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const paymentIntent = await paymentService.createPaymentIntent(totalAmount, {
           registrationId: registration.id,
-          sessionId,
-          eventTitle: session.event.title,
+          eventId,
+          eventTitle: event.title,
         });
 
         // Store payment record
@@ -264,10 +264,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Registration not found or payment not completed" });
       }
 
-      // Update session capacity
-      const session = await storage.getSession(registration.sessionId);
-      if (session) {
-        await storage.updateSessionCapacity(registration.sessionId, session.remaining - registration.seats);
+      // Update event capacity
+      const event = await storage.getEvent(registration.eventId);
+      if (event) {
+        await storage.updateEventCapacity(registration.eventId, event.remaining - registration.seats);
       }
 
       // Generate tickets
@@ -287,8 +287,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send confirmation email
       await emailService.sendConfirmationEmail(
         registration,
-        registration.session,
-        registration.session.event,
+        registration.event,
+        registration.event,
         tickets
       );
 
@@ -323,8 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         valid: true,
         ticket,
         registration,
-        session: registration.session,
-        event: registration.session.event,
+        event: registration.event,
         checkedIn: ticket.checkedIn,
       });
     } catch (error: any) {
