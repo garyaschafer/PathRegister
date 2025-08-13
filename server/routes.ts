@@ -439,15 +439,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/events", requireAdmin, async (req, res) => {
     try {
+      console.log("Raw request body:", JSON.stringify(req.body, null, 2));
+      
       // Convert date strings to Date objects
       const body = { ...req.body };
+      console.log("Before conversion:", {
+        startTime: body.startTime,
+        startTimeType: typeof body.startTime,
+        endTime: body.endTime,
+        endTimeType: typeof body.endTime
+      });
+      
       if (body.startTime && typeof body.startTime === 'string') {
         body.startTime = new Date(body.startTime);
+        console.log("Converted startTime:", body.startTime);
       }
       if (body.endTime && typeof body.endTime === 'string') {
         body.endTime = new Date(body.endTime);
+        console.log("Converted endTime:", body.endTime);
       }
       
+      console.log("Final body before validation:", body);
       const eventData = insertEventSchema.parse(body);
       const event = await storage.createEvent(eventData);
       res.json(event);
