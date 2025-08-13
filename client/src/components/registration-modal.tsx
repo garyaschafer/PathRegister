@@ -218,7 +218,7 @@ export function RegistrationModal({ open, onClose, eventId, onSuccess }: Registr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Number of Seats</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue="1">
+                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString() || "1"}>
                     <FormControl>
                       <SelectTrigger data-testid="select-seats">
                         <SelectValue placeholder="Select number of seats" />
