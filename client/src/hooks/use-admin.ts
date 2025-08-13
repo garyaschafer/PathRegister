@@ -22,11 +22,17 @@ export function useAdmin() {
 
   const loginMutation = useMutation({
     mutationFn: async (password: string) => {
+      console.log("Frontend: Attempting login with password length:", password?.length);
       const response = await apiRequest("POST", "/api/admin/login", { password });
+      console.log("Frontend: Login response status:", response.status);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Frontend: Login successful, data:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/status"] });
+    },
+    onError: (error) => {
+      console.error("Frontend: Login mutation error:", error);
     },
   });
 
