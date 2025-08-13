@@ -21,16 +21,17 @@ class ReminderService {
     const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const twentyThreeHoursFromNow = new Date(now.getTime() + 23 * 60 * 60 * 1000);
 
-    // Get all confirmed registrations for sessions starting in ~24 hours
+    // Get all confirmed registrations for events starting in ~24 hours
     const registrations = await storage.getRegistrations();
     
     const remindersToSend = registrations.filter(registration => {
-      const sessionStart = new Date(registration.session.startTime);
+      if (!registration.event) return false;
+      const eventStart = new Date(registration.event.startTime);
       return (
         registration.status === 'confirmed' &&
         registration.paymentStatus === 'completed' &&
-        sessionStart >= twentyThreeHoursFromNow &&
-        sessionStart <= twentyFourHoursFromNow
+        eventStart >= twentyThreeHoursFromNow &&
+        eventStart <= twentyFourHoursFromNow
       );
     });
 
@@ -40,11 +41,11 @@ class ReminderService {
       try {
         await emailService.sendReminderEmail(
           registration,
-          registration.session,
-          registration.session.event,
+          registration.event,
+          registration.event,
           registration.tickets
         );
-        console.log(`Reminder sent to ${registration.email} for ${registration.session.event.title}`);
+        console.log(`Reminder sent to ${registration.email} for ${registration.event.title}`);
       } catch (error) {
         console.error(`Failed to send reminder to ${registration.email}:`, error);
       }

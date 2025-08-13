@@ -58,11 +58,22 @@ export function RegistrationModal({ open, onClose, eventId, onSuccess }: Registr
 
   const registrationMutation = useMutation({
     mutationFn: async (data: RegistrationForm) => {
-      const response = await apiRequest("POST", "/api/register", {
-        ...data,
-        eventId,
-      });
-      return response.json();
+      try {
+        const response = await apiRequest("POST", "/api/register", {
+          ...data,
+          eventId,
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: "Registration failed" }));
+          throw new Error(errorData.message || "Registration failed");
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("API request error:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       if (data.status === "payment_required") {
@@ -107,7 +118,16 @@ export function RegistrationModal({ open, onClose, eventId, onSuccess }: Registr
   };
 
   const onSubmit = (data: RegistrationForm) => {
-    registrationMutation.mutate(data);
+    try {
+      registrationMutation.mutate(data);
+    } catch (error) {
+      console.error("Registration submission error:", error);
+      toast({
+        title: "Registration Error",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!event && !isLoading) return null;
