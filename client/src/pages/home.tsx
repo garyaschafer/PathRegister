@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { EventCard } from "@/components/event-card";
-import { SimpleRegistrationModal as RegistrationModal } from "@/components/simple-registration-modal";
+import { RegistrationModalFixed as RegistrationModal } from "@/components/registration-modal-fixed";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { type EventWithRegistrations } from "@shared/schema";
