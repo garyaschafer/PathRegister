@@ -43,8 +43,8 @@ const sessionConfig = () => {
   return session({
     store: new pgStore({
       conString: process.env.DATABASE_URL,
-      createTableIfMissing: false,
-      tableName: "sessions",
+      createTableIfMissing: true,
+      tableName: "admin_sessions",
     }),
     secret: process.env.SESSION_SECRET || "register-path-secret-key",
     resave: false,
