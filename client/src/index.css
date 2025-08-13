@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(210 25% 7.8431%);
+  --card: hsl(180 6.6667% 97.0588%);
+  --card-foreground: hsl(210 25% 7.8431%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(210 25% 7.8431%);
+  --primary: hsl(207 100% 25%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(210 25% 7.8431%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 1.9608% 90%);
+  --muted-foreground: hsl(210 25% 7.8431%);
+  --accent: hsl(211.5789 51.3514% 92.7451%);
+  --accent-foreground: hsl(207 100% 25%);
+  --destructive: hsl(356.3033 90.5579% 54.3137%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(201.4286 30.4348% 90.9804%);
+  --input: hsl(200 23.0769% 97.4510%);
+  --ring: hsl(207 100% 25%);
+  --chart-1: hsl(207 100% 25%);
+  --chart-2: hsl(159.7826 100% 36.0784%);
+  --chart-3: hsl(42.0290 92.8251% 56.2745%);
+  --chart-4: hsl(147.1429 78.5047% 41.9608%);
+  --chart-5: hsl(341.4894 75.2000% 50.9804%);
+  --sidebar: hsl(180 6.6667% 97.0588%);
+  --sidebar-foreground: hsl(210 25% 7.8431%);
+  --sidebar-primary: hsl(207 100% 25%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(211.5789 51.3514% 92.7451%);
+  --sidebar-accent-foreground: hsl(207 100% 25%);
+  --sidebar-border: hsl(205.0000 25.0000% 90.5882%);
+  --sidebar-ring: hsl(207 100% 25%);
+  --font-sans: 'Inter', 'Open Sans', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: 0.5rem;
+  --library-blue: hsl(207 100% 25%);
+  --library-light: hsl(210 20% 98%);
+}
+
+.dark {
+  --background: hsl(0 0% 0%);
+  --foreground: hsl(200 6.6667% 91.1765%);
+  --card: hsl(228 9.8039% 10%);
+  --card-foreground: hsl(0 0% 85.0980%);
+  --popover: hsl(0 0% 0%);
+  --popover-foreground: hsl(200 6.6667% 91.1765%);
+  --primary: hsl(207 100% 40%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(195.0000 15.3846% 94.9020%);
+  --secondary-foreground: hsl(210 25% 7.8431%);
+  --muted: hsl(0 0% 9.4118%);
+  --muted-foreground: hsl(210 3.3898% 46.2745%);
+  --accent: hsl(207 70% 15%);
+  --accent-foreground: hsl(207 100% 40%);
+  --destructive: hsl(356.3033 90.5579% 54.3137%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(210 5.2632% 14.9020%);
+  --input: hsl(207.6923 27.6596% 18.4314%);
+  --ring: hsl(207 100% 40%);
+  --chart-1: hsl(207 100% 40%);
+  --chart-2: hsl(159.7826 100% 36.0784%);
+  --chart-3: hsl(42.0290 92.8251% 56.2745%);
+  --chart-4: hsl(147.1429 78.5047% 41.9608%);
+  --chart-5: hsl(341.4894 75.2000% 50.9804%);
+  --sidebar: hsl(228 9.8039% 10%);
+  --sidebar-foreground: hsl(0 0% 85.0980%);
+  --sidebar-primary: hsl(207 100% 40%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(207 70% 15%);
+  --sidebar-accent-foreground: hsl(207 100% 40%);
+  --sidebar-border: hsl(205.7143 15.7895% 26.0784%);
+  --sidebar-ring: hsl(207 100% 40%);
+  --library-blue: hsl(207 100% 40%);
+  --library-light: hsl(210 20% 5%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  .library-gradient {
+    background: linear-gradient(135deg, var(--library-blue), hsl(207 100% 35%));
+  }
+
+  .hero-section {
+    background: linear-gradient(135deg, var(--library-blue), hsl(207 100% 35%));
+  }
+
+  .library-card {
+    @apply bg-card border border-border rounded-xl shadow-sm;
+  }
+
+  .library-button {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-colors;
+  }
+
+  .library-button-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors;
+  }
+
+  .library-input {
+    @apply border border-input bg-background px-4 py-3 rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent;
+  }
+
+  .library-badge-free {
+    @apply bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .library-badge-paid {
+    @apply bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .library-badge-community {
+    @apply bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .library-session-card {
+    @apply border border-border rounded-lg p-4 hover:border-primary transition-colors;
+  }
+
+  .library-session-full {
+    @apply border-red-200 bg-red-50;
+  }
+
+  .library-stats-card {
+    @apply bg-card rounded-xl shadow-sm p-6;
+  }
+
+  .library-nav-link {
+    @apply text-foreground hover:text-primary transition-colors;
+  }
+
+  .library-footer {
+    @apply bg-gray-900 text-white;
+  }
+
+  .library-qr-scanner {
+    @apply bg-gray-900 text-white;
+  }
+
+  .library-modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 z-50;
+  }
+
+  .library-modal-content {
+    @apply bg-background rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto;
+  }
+}
+
+/* Custom animations */
+@keyframes scanner-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.scanner-line {
+  animation: scanner-line 2s linear infinite;
+}
+
+/* QR Scanner specific styles */
+.qr-scanner-viewfinder {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.qr-scanner-corners {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  pointer-events: none;
+}
+
+.qr-scanner-corner {
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+  border: 4px solid var(--library-blue);
+}
+
+.qr-scanner-corner.top-left {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+.qr-scanner-corner.top-right {
+  top: 0;
+  right: 0;
+  border-left: none;
+  border-bottom: none;
+}
+
+.qr-scanner-corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  border-right: none;
+  border-top: none;
+}
+
+.qr-scanner-corner.bottom-right {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+/* Inter font import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
