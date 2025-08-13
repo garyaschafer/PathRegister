@@ -11,7 +11,6 @@ import { paymentService } from "./services/payments";
 import { reminderService } from "./jobs/reminders";
 import {
   insertEventSchema,
-  insertSessionSchema,
   insertRegistrationSchema,
 } from "@shared/schema";
 import { z } from "zod";
@@ -493,10 +492,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin sessions management
-  app.post("/api/admin/sessions", requireAdmin, async (req, res) => {
+  // Copy event
+  app.post("/api/admin/events/:id/copy", requireAdmin, async (req, res) => {
     try {
-      // Convert date strings to Date objects
+      // Convert date strings to Date objects if provided
       const body = { ...req.body };
       if (body.startTime && typeof body.startTime === 'string') {
         body.startTime = new Date(body.startTime);
@@ -505,20 +504,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         body.endTime = new Date(body.endTime);
       }
       
-      const sessionData = insertSessionSchema.parse(body);
-      const session = await storage.createSession(sessionData);
-      res.json(session);
+      const overrides = Object.keys(body).length > 0 ? body : undefined;
+      const copiedEvent = await storage.copyEvent(req.params.id, overrides);
+      res.json(copiedEvent);
     } catch (error: any) {
-      console.error("Create session error:", error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid session data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create session" });
+      console.error("Copy event error:", error);
+      res.status(500).json({ message: "Failed to copy event" });
     }
   });
 
-  // Get registrations for a session
-  app.get("/api/admin/sessions/:id/registrations", requireAdmin, async (req, res) => {
+  // Get registrations for an event
+  app.get("/api/admin/events/:id/registrations", requireAdmin, async (req, res) => {
     try {
       const registrations = await storage.getRegistrations(req.params.id);
       res.json(registrations);
@@ -529,7 +525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Export registrations CSV
-  app.get("/api/admin/sessions/:id/export", requireAdmin, async (req, res) => {
+  app.get("/api/admin/events/:id/export", requireAdmin, async (req, res) => {
     try {
       const registrations = await storage.getRegistrations(req.params.id);
       

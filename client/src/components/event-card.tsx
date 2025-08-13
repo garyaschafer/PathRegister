@@ -1,23 +1,23 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, MapPin, Users } from "lucide-react";
-import { type EventWithSessions } from "@shared/schema";
+import { Calendar, Clock, MapPin, Users, DollarSign } from "lucide-react";
+import { type EventWithRegistrations } from "@shared/schema";
 
 interface EventCardProps {
-  event: EventWithSessions;
-  onRegister: (sessionId: string) => void;
-  onJoinWaitlist: (sessionId: string) => void;
+  event: EventWithRegistrations;
+  onRegister: (eventId: string) => void;
+  onJoinWaitlist: (eventId: string) => void;
 }
 
 export function EventCard({ event, onRegister, onJoinWaitlist }: EventCardProps) {
-  const getEventBadge = (price: string) => {
-    const priceNum = parseFloat(price);
+  const getEventBadge = (price: string | number) => {
+    const priceNum = typeof price === 'string' ? parseFloat(price) : price;
     if (priceNum === 0) return <Badge className="library-badge-free">Free Event</Badge>;
     return <Badge className="library-badge-paid">Premium Workshop</Badge>;
   };
 
-  const formatTime = (date: string) => {
+  const formatTime = (date: string | Date) => {
     return new Date(date).toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -25,13 +25,17 @@ export function EventCard({ event, onRegister, onJoinWaitlist }: EventCardProps)
     });
   };
 
-  const formatDate = (date: string) => {
+  const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',
       year: 'numeric'
     });
   };
+
+  const isFull = event.remaining <= 0;
+  const price = typeof event.price === 'string' ? parseFloat(event.price) : event.price;
+  const registeredCount = event.capacity - event.remaining;
 
   return (
     <Card className="library-card overflow-hidden" data-testid={`card-event-${event.id}`}>
@@ -46,10 +50,10 @@ export function EventCard({ event, onRegister, onJoinWaitlist }: EventCardProps)
         </div>
         <div className="md:w-2/3 p-8">
           <div className="flex items-center justify-between mb-4">
-            {getEventBadge(event.sessions[0]?.price || "0")}
+            {getEventBadge(event.price)}
             <span className="text-sm text-muted-foreground">
               <Calendar className="w-4 h-4 inline mr-1" />
-              {formatDate(event.startTime.toString())}
+              {formatDate(event.startTime)}
             </span>
           </div>
           
@@ -62,70 +66,54 @@ export function EventCard({ event, onRegister, onJoinWaitlist }: EventCardProps)
           </p>
           
           <div className="space-y-4">
-            <h4 className="font-semibold text-foreground">Available Sessions:</h4>
-            
-            {event.sessions.map((session) => {
-              const isFull = session.remaining <= 0;
-              const price = parseFloat(session.price);
-              
-              return (
-                <div 
-                  key={session.id} 
-                  className={`library-session-card ${isFull ? 'library-session-full' : ''}`}
-                  data-testid={`card-session-${session.id}`}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h5 className="font-medium text-foreground" data-testid={`text-session-title-${session.id}`}>
-                        {session.title}
-                      </h5>
-                      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mt-1">
-                        <span>
-                          <Clock className="w-4 h-4 inline mr-1" />
-                          {formatTime(session.startTime.toString())} - {formatTime(session.endTime.toString())}
-                        </span>
-                        <span>
-                          <MapPin className="w-4 h-4 inline mr-1" />
-                          {session.room}
-                        </span>
-                        <span className={isFull ? "text-red-600 font-medium" : ""}>
-                          <Users className="w-4 h-4 inline mr-1" />
-                          {session.capacity - session.remaining} of {session.capacity} spots filled
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg font-bold text-primary" data-testid={`text-price-${session.id}`}>
-                        {price === 0 ? 'FREE' : `$${price}`}
-                      </span>
-                      {isFull ? (
-                        session.allowWaitlist ? (
-                          <Button 
-                            className="bg-yellow-500 text-white hover:bg-yellow-600"
-                            onClick={() => onJoinWaitlist(session.id)}
-                            data-testid={`button-waitlist-${session.id}`}
-                          >
-                            Join Waitlist
-                          </Button>
-                        ) : (
-                          <Button disabled data-testid={`button-full-${session.id}`}>
-                            Full
-                          </Button>
-                        )
-                      ) : (
-                        <Button 
-                          className="library-button"
-                          onClick={() => onRegister(session.id)}
-                          data-testid={`button-register-${session.id}`}
-                        >
-                          Register
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+            <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-2" />
+                {formatTime(event.startTime)} - {formatTime(event.endTime)}
+              </div>
+              <div className="flex items-center">
+                <MapPin className="w-4 h-4 mr-2" />
+                {event.location}{event.room && ` - ${event.room}`}
+              </div>
+              <div className="flex items-center">
+                <Users className="w-4 h-4 mr-2" />
+                {registeredCount}/{event.capacity} registered
+              </div>
+              {price > 0 && (
+                <div className="flex items-center">
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  ${price.toFixed(2)}
                 </div>
-              );
-            })}
+              )}
+            </div>
+            
+            <div className="flex gap-3 pt-4">
+              {!isFull ? (
+                <Button 
+                  className="library-button flex-1"
+                  onClick={() => onRegister(event.id)}
+                  data-testid={`button-register-${event.id}`}
+                >
+                  {price > 0 ? `Register - $${price.toFixed(2)}` : "Register Free"}
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" className="flex-1" disabled>
+                    Event Full
+                  </Button>
+                  {event.allowWaitlist && (
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => onJoinWaitlist(event.id)}
+                      data-testid={`button-waitlist-${event.id}`}
+                    >
+                      Join Waitlist
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

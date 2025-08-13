@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { type EventWithRegistrations } from "@shared/schema";
 
 const registrationSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -28,11 +29,11 @@ type RegistrationForm = z.infer<typeof registrationSchema>;
 interface RegistrationModalProps {
   open: boolean;
   onClose: () => void;
-  sessionId: string | null;
+  eventId: string | null;
   onSuccess: (data: any) => void;
 }
 
-export function RegistrationModal({ open, onClose, sessionId, onSuccess }: RegistrationModalProps) {
+export function RegistrationModal({ open, onClose, eventId, onSuccess }: RegistrationModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,17 +50,17 @@ export function RegistrationModal({ open, onClose, sessionId, onSuccess }: Regis
     },
   });
 
-  // Get session details
-  const { data: session, isLoading } = useQuery({
-    queryKey: ["/api/sessions", sessionId],
-    enabled: !!sessionId && open,
+  // Get event details
+  const { data: event, isLoading } = useQuery<EventWithRegistrations>({
+    queryKey: ["/api/events", eventId],
+    enabled: !!eventId && open,
   });
 
   const registrationMutation = useMutation({
     mutationFn: async (data: RegistrationForm) => {
       const response = await apiRequest("POST", "/api/register", {
         ...data,
-        sessionId,
+        eventId,
       });
       return response.json();
     },
@@ -109,24 +110,24 @@ export function RegistrationModal({ open, onClose, sessionId, onSuccess }: Regis
     registrationMutation.mutate(data);
   };
 
-  if (!session && !isLoading) return null;
+  if (!event && !isLoading) return null;
 
-  const sessionPrice = session && session.price ? parseFloat(session.price) : 0;
-  const totalCost = sessionPrice * (form.watch("seats") || 1);
+  const eventPrice = event && event.price ? parseFloat(event.price.toString()) : 0;
+  const totalCost = eventPrice * (form.watch("seats") || 1);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="library-modal-content max-w-2xl" data-testid="modal-registration">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold">Register for Session</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">Register for Event</DialogTitle>
             <Button variant="ghost" size="sm" onClick={handleClose} data-testid="button-close-modal">
               <X className="w-5 h-5" />
             </Button>
           </div>
-          {session && (
+          {event && (
             <p className="text-muted-foreground">
-              {(session as any).event?.title || 'Event'} - {session.title}
+              {event.title}
             </p>
           )}
         </DialogHeader>
@@ -215,7 +216,7 @@ export function RegistrationModal({ open, onClose, sessionId, onSuccess }: Regis
               )}
             />
 
-            {sessionPrice > 0 && (
+            {eventPrice > 0 && (
               <div className="bg-blue-50 p-4 rounded-lg" data-testid="section-payment">
                 <h4 className="font-semibold text-foreground mb-3">Payment Information</h4>
                 <div className="flex justify-between items-center text-lg">

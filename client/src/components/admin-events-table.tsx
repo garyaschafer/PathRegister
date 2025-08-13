@@ -1,25 +1,23 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Edit, Users, QrCode, Plus, Download, Filter } from "lucide-react";
+import { Edit, Users, QrCode, Plus, Download, Filter, Copy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { EventForm } from "@/components/event-form";
-import { SessionForm } from "@/components/session-form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { type EventWithSessions } from "@shared/schema";
+import { type EventWithRegistrations } from "@shared/schema";
 
 export function AdminEventsTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedEvent, setSelectedEvent] = useState<EventWithSessions | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventWithRegistrations | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
-  const [showSessionForm, setShowSessionForm] = useState(false);
 
-  const { data: events, isLoading } = useQuery<EventWithSessions[]>({
+  const { data: events, isLoading } = useQuery<EventWithRegistrations[]>({
     queryKey: ["/api/admin/events"],
   });
 
@@ -43,9 +41,30 @@ export function AdminEventsTable() {
     },
   });
 
-  const exportRegistrations = async (sessionId: string) => {
+  const copyEventMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      const response = await apiRequest("POST", `/api/admin/events/${eventId}/copy`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Event Copied",
+        description: "Event has been successfully copied.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Copy Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const exportRegistrations = async (eventId: string) => {
     try {
-      const response = await fetch(`/api/admin/sessions/${sessionId}/export`, {
+      const response = await fetch(`/api/admin/events/${eventId}/export`, {
         credentials: 'include',
       });
       
@@ -103,11 +122,7 @@ export function AdminEventsTable() {
     queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
   };
 
-  const handleSessionFormSuccess = () => {
-    setShowSessionForm(false);
-    setSelectedEvent(null);
-    queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
-  };
+
 
   if (isLoading) {
     return (
@@ -169,7 +184,7 @@ export function AdminEventsTable() {
                   Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Sessions
+                  Capacity
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Registrations
@@ -184,12 +199,7 @@ export function AdminEventsTable() {
             </thead>
             <tbody className="bg-background divide-y divide-border">
               {events?.map((event) => {
-                const totalRegistrations = event.sessions.reduce((sum, session) => 
-                  sum + (session.capacity - session.remaining), 0
-                );
-                const totalCapacity = event.sessions.reduce((sum, session) => 
-                  sum + session.capacity, 0
-                );
+                const registrationsCount = event.capacity - event.remaining;
 
                 return (
                   <tr key={event.id} data-testid={`row-event-${event.id}`}>
@@ -199,18 +209,18 @@ export function AdminEventsTable() {
                           {event.title}
                         </div>
                         <div className="text-sm text-muted-foreground" data-testid={`text-event-location-${event.id}`}>
-                          {event.location}
+                          {event.location}{event.room && ` - ${event.room}`}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground" data-testid={`text-event-date-${event.id}`}>
                       {formatDate(event.startTime.toString())}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground" data-testid={`text-event-sessions-${event.id}`}>
-                      {event.sessions.length}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground" data-testid={`text-event-capacity-${event.id}`}>
+                      {event.capacity}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground" data-testid={`text-event-registrations-${event.id}`}>
-                      {totalRegistrations}/{totalCapacity}
+                      {registrationsCount}/{event.capacity}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(event.status)}
@@ -229,66 +239,24 @@ export function AdminEventsTable() {
                           <Edit className="w-4 h-4 text-primary" />
                         </Button>
                         
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              data-testid={`button-view-registrations-${event.id}`}
-                            >
-                              <Users className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>Sessions for {event.title}</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              {event.sessions.map((session) => (
-                                <div key={session.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                                  <div>
-                                    <h4 className="font-medium">{session.title}</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                      {session.capacity - session.remaining}/{session.capacity} registered
-                                    </p>
-                                  </div>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => exportRegistrations(session.id)}
-                                    data-testid={`button-export-${session.id}`}
-                                  >
-                                    <Download className="w-4 h-4 mr-2" />
-                                    Export CSV
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => exportRegistrations(event.id)}
+                          data-testid={`button-export-registrations-${event.id}`}
+                        >
+                          <Download className="w-4 h-4 text-muted-foreground" />
+                        </Button>
 
-                        <Dialog open={showSessionForm} onOpenChange={setShowSessionForm}>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedEvent(event)}
-                              data-testid={`button-add-session-${event.id}`}
-                            >
-                              <Plus className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>Add Session to {event.title}</DialogTitle>
-                            </DialogHeader>
-                            <SessionForm 
-                              eventId={event.id}
-                              onSuccess={handleSessionFormSuccess}
-                              onCancel={() => setShowSessionForm(false)}
-                            />
-                          </DialogContent>
-                        </Dialog>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyEventMutation.mutate(event.id)}
+                          disabled={copyEventMutation.isPending}
+                          data-testid={`button-copy-event-${event.id}`}
+                        >
+                          <Copy className="w-4 h-4 text-muted-foreground" />
+                        </Button>
                       </div>
                     </td>
                   </tr>

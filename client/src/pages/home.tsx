@@ -9,32 +9,32 @@ import { EventCard } from "@/components/event-card";
 import { RegistrationModal } from "@/components/registration-modal";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { type EventWithSessions } from "@shared/schema";
+import { type EventWithRegistrations } from "@shared/schema";
 
 export default function Home() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [registrationModal, setRegistrationModal] = useState({
     open: false,
-    sessionId: null as string | null,
+    eventId: null as string | null,
   });
 
-  const { data: events, isLoading, error } = useQuery<EventWithSessions[]>({
+  const { data: events, isLoading, error } = useQuery<EventWithRegistrations[]>({
     queryKey: ["/api/events"],
   });
 
-  const handleRegister = (sessionId: string) => {
+  const handleRegister = (eventId: string) => {
     setRegistrationModal({
       open: true,
-      sessionId,
+      eventId,
     });
   };
 
-  const handleJoinWaitlist = (sessionId: string) => {
+  const handleJoinWaitlist = (eventId: string) => {
     // For now, use the same modal but could be differentiated
     setRegistrationModal({
       open: true,
-      sessionId,
+      eventId,
     });
   };
 
@@ -52,7 +52,7 @@ export default function Home() {
   const closeRegistrationModal = () => {
     setRegistrationModal({
       open: false,
-      sessionId: null,
+      eventId: null,
     });
   };
 
@@ -137,7 +137,7 @@ export default function Home() {
       <RegistrationModal
         open={registrationModal.open}
         onClose={closeRegistrationModal}
-        sessionId={registrationModal.sessionId}
+        eventId={registrationModal.eventId}
         onSuccess={handleRegistrationSuccess}
       />
     </div>

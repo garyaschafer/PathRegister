@@ -8,16 +8,21 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { type EventWithSessions } from "@shared/schema";
+import { type EventWithRegistrations } from "@shared/schema";
 
 const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   location: z.string().min(1, "Location is required"),
+  room: z.string().optional(),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
+  capacity: z.number().min(1, "Capacity must be at least 1"),
+  price: z.number().min(0, "Price must be 0 or greater"),
+  allowWaitlist: z.boolean().default(true),
   heroImage: z.string().optional(),
   status: z.enum(["draft", "published"]),
 });
@@ -25,7 +30,7 @@ const eventSchema = z.object({
 type EventForm = z.infer<typeof eventSchema>;
 
 interface EventFormProps {
-  event?: EventWithSessions | null;
+  event?: EventWithRegistrations | null;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -39,8 +44,12 @@ export function EventForm({ event, onSuccess, onCancel }: EventFormProps) {
       title: event?.title || "",
       description: event?.description || "",
       location: event?.location || "",
+      room: event?.room || "",
       startTime: event?.startTime ? new Date(event.startTime).toISOString().slice(0, 16) : "",
       endTime: event?.endTime ? new Date(event.endTime).toISOString().slice(0, 16) : "",
+      capacity: event?.capacity || 20,
+      price: event?.price ? parseFloat(event.price.toString()) : 0,
+      allowWaitlist: event?.allowWaitlist ?? true,
       heroImage: event?.heroImage || "",
       status: event?.status || "draft",
     },
@@ -170,19 +179,99 @@ export function EventForm({ event, onSuccess, onCancel }: EventFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location *</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter event location" {...field} data-testid="input-event-location" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter event location" {...field} data-testid="input-event-location" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="room"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Room</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter specific room" {...field} data-testid="input-event-room" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <FormField
+            control={form.control}
+            name="capacity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Capacity *</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min="1"
+                    placeholder="20" 
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    data-testid="input-event-capacity" 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price ($)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00" 
+                    {...field}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    data-testid="input-event-price" 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="allowWaitlist"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center space-x-3 space-y-0 pt-6">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    data-testid="checkbox-allow-waitlist"
+                  />
+                </FormControl>
+                <FormLabel className="text-sm font-normal">
+                  Allow waitlist when full
+                </FormLabel>
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField

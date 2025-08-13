@@ -30,34 +30,23 @@ export const events = pgTable("events", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   location: text("location").notNull(),
-  startTime: timestamp("start_time").notNull(),
-  endTime: timestamp("end_time").notNull(),
-  heroImage: text("hero_image"),
-  status: varchar("status", { enum: ["draft", "published"] }).default("draft").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Sessions table (sub-events within an event)
-export const sessions = pgTable("sessions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  eventId: varchar("event_id").notNull().references(() => events.id, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  room: text("room").notNull(),
+  room: text("room"),
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
   capacity: integer("capacity").notNull(),
   remaining: integer("remaining").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).default("0.00").notNull(),
   allowWaitlist: boolean("allow_waitlist").default(true).notNull(),
-  status: varchar("status", { enum: ["active", "cancelled", "full"] }).default("active").notNull(),
+  heroImage: text("hero_image"),
+  status: varchar("status", { enum: ["draft", "published"] }).default("draft").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Registrations table
 export const registrations = pgTable("registrations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  sessionId: varchar("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  eventId: varchar("event_id").notNull().references(() => events.id, { onDelete: "cascade" }),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   email: text("email").notNull(),
@@ -94,21 +83,13 @@ export const payments = pgTable("payments", {
 
 // Relations
 export const eventsRelations = relations(events, ({ many }) => ({
-  sessions: many(sessions),
-}));
-
-export const sessionsRelations = relations(sessions, ({ one, many }) => ({
-  event: one(events, {
-    fields: [sessions.eventId],
-    references: [events.id],
-  }),
   registrations: many(registrations),
 }));
 
 export const registrationsRelations = relations(registrations, ({ one, many }) => ({
-  session: one(sessions, {
-    fields: [registrations.sessionId],
-    references: [sessions.id],
+  event: one(events, {
+    fields: [registrations.eventId],
+    references: [events.id],
   }),
   tickets: many(tickets),
   payments: many(payments),
@@ -133,11 +114,7 @@ export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
-
-export const insertSessionSchema = createInsertSchema(sessions).omit({
-  id: true,
-  createdAt: true,
+  remaining: true, // Auto-calculated from capacity
 });
 
 export const insertRegistrationSchema = createInsertSchema(registrations).omit({
@@ -159,8 +136,6 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
 // Types
 export type Event = typeof events.$inferSelect;
 export type InsertEvent = z.infer<typeof insertEventSchema>;
-export type Session = typeof sessions.$inferSelect;
-export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type Registration = typeof registrations.$inferSelect;
 export type InsertRegistration = z.infer<typeof insertRegistrationSchema>;
 export type Ticket = typeof tickets.$inferSelect;
@@ -169,15 +144,11 @@ export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 
 // Extended types with relations
-export type EventWithSessions = Event & {
-  sessions: Session[];
-};
-
-export type SessionWithEvent = Session & {
-  event: Event;
+export type EventWithRegistrations = Event & {
+  registrations: Registration[];
 };
 
 export type RegistrationWithDetails = Registration & {
-  session: SessionWithEvent;
+  event: Event;
   tickets: Ticket[];
 };

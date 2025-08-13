@@ -1,44 +1,34 @@
 import {
   events,
-  sessions,
   registrations,
   tickets,
   payments,
   type Event,
-  type Session,
   type Registration,
   type Ticket,
   type Payment,
   type InsertEvent,
-  type InsertSession,
   type InsertRegistration,
   type InsertTicket,
   type InsertPayment,
-  type EventWithSessions,
-  type SessionWithEvent,
+  type EventWithRegistrations,
   type RegistrationWithDetails,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Events
-  getEvents(status?: string): Promise<EventWithSessions[]>;
-  getEvent(id: string): Promise<EventWithSessions | undefined>;
+  getEvents(status?: string): Promise<EventWithRegistrations[]>;
+  getEvent(id: string): Promise<EventWithRegistrations | undefined>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: string, event: Partial<InsertEvent>): Promise<Event>;
   deleteEvent(id: string): Promise<void>;
-
-  // Sessions
-  getSessions(eventId?: string): Promise<SessionWithEvent[]>;
-  getSession(id: string): Promise<SessionWithEvent | undefined>;
-  createSession(session: InsertSession): Promise<Session>;
-  updateSession(id: string, session: Partial<InsertSession>): Promise<Session>;
-  deleteSession(id: string): Promise<void>;
-  updateSessionCapacity(id: string, remaining: number): Promise<void>;
+  copyEvent(id: string, overrides?: Partial<InsertEvent>): Promise<Event>;
+  updateEventCapacity(id: string, remaining: number): Promise<void>;
 
   // Registrations
-  getRegistrations(sessionId?: string): Promise<RegistrationWithDetails[]>;
+  getRegistrations(eventId?: string): Promise<RegistrationWithDetails[]>;
   getRegistration(id: string): Promise<RegistrationWithDetails | undefined>;
   createRegistration(registration: InsertRegistration): Promise<Registration>;
   updateRegistration(id: string, registration: Partial<InsertRegistration>): Promise<Registration>;
@@ -62,7 +52,6 @@ export interface IStorage {
   // Analytics
   getEventStats(): Promise<{
     totalEvents: number;
-    activeSessions: number;
     totalRegistrations: number;
     revenue: number;
   }>;
@@ -70,196 +59,157 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // Events
-  async getEvents(status?: string): Promise<EventWithSessions[]> {
-    const query = db.select().from(events);
+  async getEvents(status?: string): Promise<EventWithRegistrations[]> {
+    let query = db.select().from(events);
     if (status) {
-      query.where(eq(events.status, status as any));
+      query = query.where(eq(events.status, status as any));
     }
-    const eventsData = await query.orderBy(asc(events.startTime));
     
-    const eventsWithSessions = await Promise.all(
-      eventsData.map(async (event) => ({
-        ...event,
-        sessions: await db.select().from(sessions).where(eq(sessions.eventId, event.id)).orderBy(asc(sessions.startTime)),
-      }))
+    const eventsData = await query.orderBy(desc(events.createdAt));
+    
+    // Get registrations for each event
+    const eventsWithRegistrations = await Promise.all(
+      eventsData.map(async (event) => {
+        const eventRegistrations = await db
+          .select()
+          .from(registrations)
+          .where(eq(registrations.eventId, event.id));
+        
+        return {
+          ...event,
+          registrations: eventRegistrations,
+        };
+      })
     );
     
-    return eventsWithSessions;
+    return eventsWithRegistrations;
   }
 
-  async getEvent(id: string): Promise<EventWithSessions | undefined> {
+  async getEvent(id: string): Promise<EventWithRegistrations | undefined> {
     const [event] = await db.select().from(events).where(eq(events.id, id));
     if (!event) return undefined;
     
-    const eventSessions = await db.select().from(sessions).where(eq(sessions.eventId, id)).orderBy(asc(sessions.startTime));
+    const eventRegistrations = await db
+      .select()
+      .from(registrations)
+      .where(eq(registrations.eventId, id));
     
     return {
       ...event,
-      sessions: eventSessions,
+      registrations: eventRegistrations,
     };
   }
 
   async createEvent(event: InsertEvent): Promise<Event> {
-    const [newEvent] = await db.insert(events).values(event).returning();
-    return newEvent;
+    // Set remaining to capacity when creating
+    const eventData = {
+      ...event,
+      remaining: event.capacity,
+    };
+    
+    const [created] = await db.insert(events).values(eventData).returning();
+    return created;
   }
 
   async updateEvent(id: string, event: Partial<InsertEvent>): Promise<Event> {
-    const [updatedEvent] = await db
+    const [updated] = await db
       .update(events)
       .set({ ...event, updatedAt: new Date() })
       .where(eq(events.id, id))
       .returning();
-    return updatedEvent;
+    return updated;
   }
 
   async deleteEvent(id: string): Promise<void> {
     await db.delete(events).where(eq(events.id, id));
   }
 
-  // Sessions
-  async getSessions(eventId?: string): Promise<SessionWithEvent[]> {
-    const query = db
-      .select({
-        session: sessions,
-        event: events,
-      })
-      .from(sessions)
-      .innerJoin(events, eq(sessions.eventId, events.id));
-    
-    if (eventId) {
-      query.where(eq(sessions.eventId, eventId));
+  async copyEvent(id: string, overrides?: Partial<InsertEvent>): Promise<Event> {
+    const originalEvent = await this.getEvent(id);
+    if (!originalEvent) {
+      throw new Error("Event not found");
     }
-    
-    const result = await query.orderBy(asc(sessions.startTime));
-    
-    return result.map(({ session, event }) => ({
-      ...session,
-      event,
-    }));
-  }
 
-  async getSession(id: string): Promise<SessionWithEvent | undefined> {
-    const [result] = await db
-      .select({
-        session: sessions,
-        event: events,
-      })
-      .from(sessions)
-      .innerJoin(events, eq(sessions.eventId, events.id))
-      .where(eq(sessions.id, id));
-    
-    if (!result) return undefined;
-    
-    return {
-      ...result.session,
-      event: result.event,
+    const { id: _, createdAt, updatedAt, registrations, ...eventData } = originalEvent;
+    const newEventData = {
+      ...eventData,
+      ...overrides,
+      title: overrides?.title || `${eventData.title} (Copy)`,
+      remaining: overrides?.capacity || eventData.capacity, // Reset remaining to capacity
     };
+
+    return this.createEvent(newEventData);
   }
 
-  async createSession(session: InsertSession): Promise<Session> {
-    const sessionData = {
-      ...session,
-      remaining: session.capacity, // Set remaining to capacity initially
-    };
-    const [newSession] = await db.insert(sessions).values(sessionData).returning();
-    return newSession;
-  }
-
-  async updateSession(id: string, session: Partial<InsertSession>): Promise<Session> {
-    const [updatedSession] = await db
-      .update(sessions)
-      .set(session)
-      .where(eq(sessions.id, id))
-      .returning();
-    return updatedSession;
-  }
-
-  async deleteSession(id: string): Promise<void> {
-    await db.delete(sessions).where(eq(sessions.id, id));
-  }
-
-  async updateSessionCapacity(id: string, remaining: number): Promise<void> {
+  async updateEventCapacity(id: string, remaining: number): Promise<void> {
     await db
-      .update(sessions)
-      .set({ remaining })
-      .where(eq(sessions.id, id));
+      .update(events)
+      .set({ remaining, updatedAt: new Date() })
+      .where(eq(events.id, id));
   }
 
   // Registrations
-  async getRegistrations(sessionId?: string): Promise<RegistrationWithDetails[]> {
-    const query = db
-      .select({
-        registration: registrations,
-        session: sessions,
-        event: events,
-      })
+  async getRegistrations(eventId?: string): Promise<RegistrationWithDetails[]> {
+    let query = db
+      .select()
       .from(registrations)
-      .innerJoin(sessions, eq(registrations.sessionId, sessions.id))
-      .innerJoin(events, eq(sessions.eventId, events.id));
-    
-    if (sessionId) {
-      query.where(eq(registrations.sessionId, sessionId));
+      .leftJoin(events, eq(registrations.eventId, events.id));
+
+    if (eventId) {
+      query = query.where(eq(registrations.eventId, eventId));
     }
+
+    const results = await query.orderBy(desc(registrations.createdAt));
     
-    const result = await query.orderBy(desc(registrations.createdAt));
-    
-    const registrationsWithDetails = await Promise.all(
-      result.map(async ({ registration, session, event }) => {
-        const ticketList = await db.select().from(tickets).where(eq(tickets.registrationId, registration.id));
+    return Promise.all(
+      results.map(async (result) => {
+        const registrationTickets = await db
+          .select()
+          .from(tickets)
+          .where(eq(tickets.registrationId, result.registrations.id));
         
         return {
-          ...registration,
-          session: {
-            ...session,
-            event,
-          },
-          tickets: ticketList,
+          ...result.registrations,
+          event: result.events!,
+          tickets: registrationTickets,
         };
       })
     );
-    
-    return registrationsWithDetails;
   }
 
   async getRegistration(id: string): Promise<RegistrationWithDetails | undefined> {
     const [result] = await db
-      .select({
-        registration: registrations,
-        session: sessions,
-        event: events,
-      })
+      .select()
       .from(registrations)
-      .innerJoin(sessions, eq(registrations.sessionId, sessions.id))
-      .innerJoin(events, eq(sessions.eventId, events.id))
+      .leftJoin(events, eq(registrations.eventId, events.id))
       .where(eq(registrations.id, id));
     
     if (!result) return undefined;
     
-    const ticketList = await db.select().from(tickets).where(eq(tickets.registrationId, id));
+    const registrationTickets = await db
+      .select()
+      .from(tickets)
+      .where(eq(tickets.registrationId, id));
     
     return {
-      ...result.registration,
-      session: {
-        ...result.session,
-        event: result.event,
-      },
-      tickets: ticketList,
+      ...result.registrations,
+      event: result.events!,
+      tickets: registrationTickets,
     };
   }
 
   async createRegistration(registration: InsertRegistration): Promise<Registration> {
-    const [newRegistration] = await db.insert(registrations).values(registration).returning();
-    return newRegistration;
+    const [created] = await db.insert(registrations).values(registration).returning();
+    return created;
   }
 
   async updateRegistration(id: string, registration: Partial<InsertRegistration>): Promise<Registration> {
-    const [updatedRegistration] = await db
+    const [updated] = await db
       .update(registrations)
       .set(registration)
       .where(eq(registrations.id, id))
       .returning();
-    return updatedRegistration;
+    return updated;
   }
 
   async deleteRegistration(id: string): Promise<void> {
@@ -268,39 +218,39 @@ export class DatabaseStorage implements IStorage {
 
   // Tickets
   async getTickets(registrationId?: string): Promise<Ticket[]> {
-    const query = db.select().from(tickets);
+    let query = db.select().from(tickets);
     if (registrationId) {
-      query.where(eq(tickets.registrationId, registrationId));
+      query = query.where(eq(tickets.registrationId, registrationId));
     }
     return await query.orderBy(desc(tickets.createdAt));
   }
 
   async getTicket(id: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.id, id));
-    return ticket || undefined;
+    return ticket;
   }
 
   async getTicketByCode(ticketCode: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.ticketCode, ticketCode));
-    return ticket || undefined;
+    return ticket;
   }
 
   async createTicket(ticket: InsertTicket): Promise<Ticket> {
-    const [newTicket] = await db.insert(tickets).values(ticket).returning();
-    return newTicket;
+    const [created] = await db.insert(tickets).values(ticket).returning();
+    return created;
   }
 
   async updateTicket(id: string, ticket: Partial<InsertTicket>): Promise<Ticket> {
-    const [updatedTicket] = await db
+    const [updated] = await db
       .update(tickets)
       .set(ticket)
       .where(eq(tickets.id, id))
       .returning();
-    return updatedTicket;
+    return updated;
   }
 
   async checkInTicket(ticketCode: string): Promise<Ticket> {
-    const [checkedInTicket] = await db
+    const [updated] = await db
       .update(tickets)
       .set({ 
         checkedIn: true, 
@@ -308,59 +258,68 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(tickets.ticketCode, ticketCode))
       .returning();
-    return checkedInTicket;
+    return updated;
   }
 
   // Payments
   async getPayments(registrationId?: string): Promise<Payment[]> {
-    const query = db.select().from(payments);
+    let query = db.select().from(payments);
     if (registrationId) {
-      query.where(eq(payments.registrationId, registrationId));
+      query = query.where(eq(payments.registrationId, registrationId));
     }
     return await query.orderBy(desc(payments.createdAt));
   }
 
   async getPayment(id: string): Promise<Payment | undefined> {
     const [payment] = await db.select().from(payments).where(eq(payments.id, id));
-    return payment || undefined;
+    return payment;
   }
 
   async getPaymentByIntentId(paymentIntentId: string): Promise<Payment | undefined> {
-    const [payment] = await db.select().from(payments).where(eq(payments.stripePaymentIntentId, paymentIntentId));
-    return payment || undefined;
+    const [payment] = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.stripePaymentIntentId, paymentIntentId));
+    return payment;
   }
 
   async createPayment(payment: InsertPayment): Promise<Payment> {
-    const [newPayment] = await db.insert(payments).values(payment).returning();
-    return newPayment;
+    const [created] = await db.insert(payments).values(payment).returning();
+    return created;
   }
 
   async updatePayment(id: string, payment: Partial<InsertPayment>): Promise<Payment> {
-    const [updatedPayment] = await db
+    const [updated] = await db
       .update(payments)
       .set({ ...payment, updatedAt: new Date() })
       .where(eq(payments.id, id))
       .returning();
-    return updatedPayment;
+    return updated;
   }
 
   // Analytics
   async getEventStats(): Promise<{
     totalEvents: number;
-    activeSessions: number;
     totalRegistrations: number;
     revenue: number;
   }> {
-    const [eventsCount] = await db.select({ count: sql`count(*)` }).from(events);
-    const [sessionsCount] = await db.select({ count: sql`count(*)` }).from(sessions).where(eq(sessions.status, 'active'));
-    const [registrationsCount] = await db.select({ count: sql`count(*)` }).from(registrations);
-    const [revenueSum] = await db.select({ sum: sql`coalesce(sum(total_amount), 0)` }).from(registrations).where(eq(registrations.paymentStatus, 'completed'));
+    const [eventCount] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(events);
+
+    const [registrationCount] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(registrations);
+
+    const [revenueSum] = await db
+      .select({ sum: sql<number>`coalesce(sum(${registrations.totalAmount}), 0)::float` })
+      .from(registrations)
+      .where(eq(registrations.paymentStatus, "completed"));
 
     return {
-      totalEvents: Number(eventsCount.count) || 0,
-      activeSessions: Number(sessionsCount.count) || 0,
-      totalRegistrations: Number(registrationsCount.count) || 0,
-      revenue: Number(revenueSum.sum) || 0,
+      totalEvents: eventCount.count || 0,
+      totalRegistrations: registrationCount.count || 0,
+      revenue: revenueSum.sum || 0,
     };
   }
 }
