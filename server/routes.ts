@@ -114,7 +114,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Register for event
-  const registerSchema = insertRegistrationSchema.extend({
+  const registerSchema = insertRegistrationSchema.omit({
+    totalAmount: true, // We calculate this on the backend
+    paymentStatus: true, // We set this on the backend
+    status: true, // We set this on the backend
+  }).extend({
     eventId: z.string(),
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
