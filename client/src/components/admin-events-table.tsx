@@ -149,13 +149,13 @@ export function AdminEventsTable() {
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold">Events Management</CardTitle>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" data-testid="button-filter-events">
+            <Button variant="outline" size="sm" data-testid="button-filter-events" title="Filter Events">
               <Filter className="w-4 h-4 mr-2" />
               Filter
             </Button>
             <Dialog open={showEventForm} onOpenChange={setShowEventForm}>
               <DialogTrigger asChild>
-                <Button className="library-button" size="sm" data-testid="button-new-event">
+                <Button className="library-button" size="sm" data-testid="button-new-event" title="Create New Event">
                   <Plus className="w-4 h-4 mr-2" />
                   New Event
                 </Button>
@@ -240,6 +240,7 @@ export function AdminEventsTable() {
                             setShowEventForm(true);
                           }}
                           data-testid={`button-edit-event-${event.id}`}
+                          title="Edit Event"
                         >
                           <Edit className="w-4 h-4 text-primary" />
                         </Button>
@@ -262,6 +263,7 @@ export function AdminEventsTable() {
                           size="sm"
                           onClick={() => exportRegistrations(event.id)}
                           data-testid={`button-export-registrations-${event.id}`}
+                          title="Export Registrations to CSV"
                         >
                           <Download className="w-4 h-4 text-muted-foreground" />
                         </Button>
@@ -272,6 +274,7 @@ export function AdminEventsTable() {
                           onClick={() => copyEventMutation.mutate(event.id)}
                           disabled={copyEventMutation.isPending}
                           data-testid={`button-copy-event-${event.id}`}
+                          title="Copy Event"
                         >
                           <Copy className="w-4 h-4 text-muted-foreground" />
                         </Button>
@@ -326,6 +329,7 @@ export function AdminEventsTable() {
                 className="library-button"
                 onClick={() => setShowEventForm(true)}
                 data-testid="button-create-first-event"
+                title="Create Your First Event"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Event

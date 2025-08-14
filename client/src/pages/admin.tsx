@@ -42,6 +42,7 @@ export default function Admin() {
                 onClick={() => logout()}
                 disabled={isLoggingOut}
                 data-testid="button-admin-logout"
+                title="Logout from Admin Dashboard"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 {isLoggingOut ? "Logging out..." : "Logout"}
