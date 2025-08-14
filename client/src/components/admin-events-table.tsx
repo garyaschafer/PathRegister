@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Edit, Users, QrCode, Plus, Download, Filter, Copy, Eye } from "lucide-react";
+import { Edit, Users, QrCode, Plus, Download, Filter, Copy, Eye, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { EventForm } from "@/components/event-form";
 import { RegistrationsList } from "@/components/registrations-list";
 import { useToast } from "@/hooks/use-toast";
@@ -274,6 +275,41 @@ export function AdminEventsTable() {
                         >
                           <Copy className="w-4 h-4 text-muted-foreground" />
                         </Button>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              data-testid={`button-delete-event-${event.id}`}
+                              title="Delete Event"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{event.title}"? This action cannot be undone. 
+                                All registrations and tickets for this event will also be permanently deleted.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel data-testid={`button-cancel-delete-${event.id}`}>
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteEventMutation.mutate(event.id)}
+                                disabled={deleteEventMutation.isPending}
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                                data-testid={`button-confirm-delete-${event.id}`}
+                              >
+                                {deleteEventMutation.isPending ? "Deleting..." : "Delete Event"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </td>
                   </tr>
