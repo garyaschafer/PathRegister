@@ -115,11 +115,15 @@ export const insertEventSchema = createInsertSchema(events).omit({
   createdAt: true,
   updatedAt: true,
   remaining: true, // Auto-calculated from capacity
+}).extend({
+  price: z.union([z.string(), z.number()]).transform(val => String(val)),
 });
 
 export const insertRegistrationSchema = createInsertSchema(registrations).omit({
   id: true,
   createdAt: true,
+}).extend({
+  totalAmount: z.union([z.string(), z.number()]).transform(val => String(val)),
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({
@@ -131,6 +135,8 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  amount: z.union([z.string(), z.number()]).transform(val => String(val)),
 });
 
 // Types

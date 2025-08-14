@@ -12,6 +12,8 @@ Register Path is a comprehensive library events management application that enab
 - **Modal Fix (Aug 13)**: Resolved persistent runtime error by replacing complex Radix/React Hook Form modal with simple HTML-based modal. Registration now works successfully.
 - **Registration List View (Aug 14)**: Added comprehensive registration list functionality to admin dashboard - admins can view attendee details, check-in status, and ticket information for each event
 - **Delete Confirmation (Aug 14)**: Implemented double-confirmation delete functionality for events in admin dashboard with clear warnings about permanent data loss
+- **Tooltips Added (Aug 14)**: Added helpful hover tooltips for all admin dashboard icons (edit, view registrations, export, copy, delete) and buttons
+- **Price Validation Fix (Aug 14)**: Fixed decimal field validation issue where price field was expecting string but receiving number from frontend
 
 # User Preferences
 
