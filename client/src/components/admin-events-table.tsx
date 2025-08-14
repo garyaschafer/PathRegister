@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Edit, Users, QrCode, Plus, Download, Filter, Copy } from "lucide-react";
+import { Edit, Users, QrCode, Plus, Download, Filter, Copy, Eye } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { EventForm } from "@/components/event-form";
+import { RegistrationsList } from "@/components/registrations-list";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type EventWithRegistrations } from "@shared/schema";
@@ -16,6 +17,8 @@ export function AdminEventsTable() {
   const queryClient = useQueryClient();
   const [selectedEvent, setSelectedEvent] = useState<EventWithRegistrations | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
+  const [showRegistrations, setShowRegistrations] = useState(false);
+  const [selectedEventForRegistrations, setSelectedEventForRegistrations] = useState<EventWithRegistrations | null>(null);
 
   const { data: events, isLoading } = useQuery<EventWithRegistrations[]>({
     queryKey: ["/api/admin/events"],
@@ -139,7 +142,8 @@ export function AdminEventsTable() {
   }
 
   return (
-    <Card className="library-card overflow-hidden">
+    <>
+      <Card className="library-card overflow-hidden">
       <CardHeader className="border-b border-border">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold">Events Management</CardTitle>
@@ -242,6 +246,19 @@ export function AdminEventsTable() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => {
+                            setSelectedEventForRegistrations(event);
+                            setShowRegistrations(true);
+                          }}
+                          data-testid={`button-view-registrations-${event.id}`}
+                          title="View Registrations"
+                        >
+                          <Eye className="w-4 h-4 text-muted-foreground" />
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => exportRegistrations(event.id)}
                           data-testid={`button-export-registrations-${event.id}`}
                         >
@@ -282,5 +299,20 @@ export function AdminEventsTable() {
         </div>
       </CardContent>
     </Card>
+
+      
+      {/* Registrations List Dialog */}
+      {showRegistrations && selectedEventForRegistrations && (
+        <RegistrationsList
+          eventId={selectedEventForRegistrations.id}
+          eventTitle={selectedEventForRegistrations.title}
+          open={showRegistrations}
+          onClose={() => {
+            setShowRegistrations(false);
+            setSelectedEventForRegistrations(null);
+          }}
+        />
+      )}
+    </>
   );
 }
