@@ -8,7 +8,7 @@ export function Footer() {
           <div className="col-span-1 md:col-span-2">
             <h3 className="text-2xl font-bold mb-4">Register Path</h3>
             <p className="text-gray-300 mb-6">
-              Streamlining event registration and management for public libraries. 
+              Streamlining event registration and management for library events, workshops, and community gatherings. 
               Making community engagement simple and accessible for everyone.
             </p>
             <div className="flex space-x-4">

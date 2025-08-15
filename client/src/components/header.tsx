@@ -14,7 +14,7 @@ export function Header() {
           <Link href="/">
             <div className="flex items-center cursor-pointer">
               <h1 className="text-2xl font-bold text-primary">Register Path</h1>
-              <span className="ml-2 text-sm text-muted-foreground">Library Events</span>
+              <span className="ml-2 text-sm text-muted-foreground">Events & Workshops</span>
             </div>
           </Link>
           

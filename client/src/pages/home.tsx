@@ -103,7 +103,7 @@ export default function Home() {
               Upcoming Events
             </h2>
             <p className="text-lg text-muted-foreground" data-testid="text-events-description">
-              Join us for these exciting library programs and workshops
+              Join us for these exciting library events, workshops, and community gatherings
             </p>
           </div>
 

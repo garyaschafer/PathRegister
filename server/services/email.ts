@@ -154,7 +154,7 @@ class EmailService {
           </div>
           
           <div class="footer">
-              <p>Register Path - Library Events System</p>
+              <p>Register Path - Events & Community Management</p>
               <p>If you have any questions, please contact us.</p>
           </div>
       </body>
@@ -189,7 +189,7 @@ Your Ticket Codes: ${ticketCodes}
 Please bring your QR ticket(s) to the event for check-in.
 View your tickets online: ${process.env.BASE_URL}/ticket/${tickets[0]?.ticketCode}
 
-Register Path - Library Events System
+Register Path - Events & Community Management
     `;
   }
 

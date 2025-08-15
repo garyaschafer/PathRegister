@@ -1,6 +1,6 @@
 # Overview
 
-Register Path is a comprehensive library events management application that enables public libraries to create events with direct registration, payment processing, QR-coded ticket generation, and staff check-in functionality. The system provides a complete end-to-end solution for event management, from creation through attendee check-in, with integrated payment processing via Stripe and automated email notifications.
+Register Path is a comprehensive events management application for library events, workshops, and community gatherings that enables organizations to create events with direct registration, payment processing, QR-coded ticket generation, and staff check-in functionality. The system provides a complete end-to-end solution for event management, from creation through attendee check-in, with integrated payment processing via Stripe and automated email notifications.
 
 ## Recent Changes (August 2025)
 
@@ -15,6 +15,7 @@ Register Path is a comprehensive library events management application that enab
 - **Tooltips Added (Aug 14)**: Added helpful hover tooltips for all admin dashboard icons (edit, view registrations, export, copy, delete) and buttons
 - **Price Validation Fix (Aug 14)**: Fixed decimal field validation issue where price field was expecting string but receiving number from frontend
 - **Date Range Filter (Aug 14)**: Implemented functional filter system for admin dashboard with date range filtering - default shows 7 days prior to current date and future events, with clear visual indicators for active filters
+- **Inclusive Branding Update (Aug 14)**: Updated branding throughout application to be more inclusive, using "library events, workshops, and community gatherings" instead of library-specific language
 
 # User Preferences
 
