@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Edit, Users, QrCode, Plus, Download, Filter, Copy, Eye, Trash2 } from "lucide-react";
+import { Edit, Users, QrCode, Plus, Download, Filter, Copy, Eye, Trash2, X, Calendar } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { EventForm } from "@/components/event-form";
 import { RegistrationsList } from "@/components/registrations-list";
 import { useToast } from "@/hooks/use-toast";
@@ -20,10 +23,30 @@ export function AdminEventsTable() {
   const [showEventForm, setShowEventForm] = useState(false);
   const [showRegistrations, setShowRegistrations] = useState(false);
   const [selectedEventForRegistrations, setSelectedEventForRegistrations] = useState<EventWithRegistrations | null>(null);
+  
+  // Filter state
+  const [showFilters, setShowFilters] = useState(false);
+  const [startDateFilter, setStartDateFilter] = useState(() => {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return sevenDaysAgo.toISOString().split('T')[0];
+  });
+  const [endDateFilter, setEndDateFilter] = useState("");
 
-  const { data: events, isLoading } = useQuery<EventWithRegistrations[]>({
+  const { data: allEvents, isLoading } = useQuery<EventWithRegistrations[]>({
     queryKey: ["/api/admin/events"],
   });
+
+  // Filter events based on date range
+  const events = allEvents?.filter(event => {
+    const eventDate = new Date(event.startTime);
+    const startDate = startDateFilter ? new Date(startDateFilter) : null;
+    const endDate = endDateFilter ? new Date(endDateFilter) : null;
+    
+    if (startDate && eventDate < startDate) return false;
+    if (endDate && eventDate > endDate) return false;
+    return true;
+  }) || [];
 
   const deleteEventMutation = useMutation({
     mutationFn: async (eventId: string) => {
@@ -126,6 +149,20 @@ export function AdminEventsTable() {
     queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
   };
 
+  const clearFilters = () => {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    setStartDateFilter(sevenDaysAgo.toISOString().split('T')[0]);
+    setEndDateFilter("");
+  };
+
+  const hasActiveFilters = () => {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
+    return startDateFilter !== defaultStartDate || endDateFilter !== "";
+  };
+
 
 
   if (isLoading) {
@@ -149,10 +186,82 @@ export function AdminEventsTable() {
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold">Events Management</CardTitle>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" data-testid="button-filter-events" title="Filter Events">
-              <Filter className="w-4 h-4 mr-2" />
-              Filter
-            </Button>
+            <Popover open={showFilters} onOpenChange={setShowFilters}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant={hasActiveFilters() ? "default" : "outline"} 
+                  size="sm" 
+                  data-testid="button-filter-events" 
+                  title="Filter Events"
+                  className={hasActiveFilters() ? "library-button" : ""}
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filter
+                  {hasActiveFilters() && <Badge variant="secondary" className="ml-2 h-4 px-1 text-xs">ON</Badge>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="start">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm">Filter Events</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFilters(false)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="start-date" className="text-sm">Start Date</Label>
+                      <Input
+                        id="start-date"
+                        type="date"
+                        value={startDateFilter}
+                        onChange={(e) => setStartDateFilter(e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                    
+                    <div className="grid gap-2">
+                      <Label htmlFor="end-date" className="text-sm">End Date (Optional)</Label>
+                      <Input
+                        id="end-date"
+                        type="date"
+                        value={endDateFilter}
+                        onChange={(e) => setEndDateFilter(e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                    
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="flex-1"
+                      >
+                        Clear
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => setShowFilters(false)}
+                        className="flex-1 library-button"
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground pt-2 border-t">
+                      Default: Shows events from 7 days ago to future
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Dialog open={showEventForm} onOpenChange={setShowEventForm}>
               <DialogTrigger asChild>
                 <Button className="library-button" size="sm" data-testid="button-new-event" title="Create New Event">
@@ -176,6 +285,14 @@ export function AdminEventsTable() {
           </div>
         </div>
       </CardHeader>
+      
+      {/* Filter Results Summary */}
+      {(hasActiveFilters() || events.length !== allEvents?.length) && (
+        <div className="px-6 py-3 bg-blue-50 border-b text-sm text-blue-700">
+          Showing {events.length} of {allEvents?.length || 0} events
+          {hasActiveFilters() && " (filtered)"}
+        </div>
+      )}
       
       <CardContent className="p-0">
         <div className="overflow-x-auto">

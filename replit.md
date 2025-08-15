@@ -14,6 +14,7 @@ Register Path is a comprehensive library events management application that enab
 - **Delete Confirmation (Aug 14)**: Implemented double-confirmation delete functionality for events in admin dashboard with clear warnings about permanent data loss
 - **Tooltips Added (Aug 14)**: Added helpful hover tooltips for all admin dashboard icons (edit, view registrations, export, copy, delete) and buttons
 - **Price Validation Fix (Aug 14)**: Fixed decimal field validation issue where price field was expecting string but receiving number from frontend
+- **Date Range Filter (Aug 14)**: Implemented functional filter system for admin dashboard with date range filtering - default shows 7 days prior to current date and future events, with clear visual indicators for active filters
 
 # User Preferences
 
