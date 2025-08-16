@@ -16,6 +16,7 @@ Register Path is a comprehensive events management application for library event
 - **Price Validation Fix (Aug 14)**: Fixed decimal field validation issue where price field was expecting string but receiving number from frontend
 - **Date Range Filter (Aug 14)**: Implemented functional filter system for admin dashboard with date range filtering - default shows 7 days prior to current date and future events, with clear visual indicators for active filters
 - **Inclusive Branding Update (Aug 14)**: Updated branding throughout application to be more inclusive, using "library events, workshops, and community gatherings" instead of library-specific language
+- **Comprehensive README (Aug 14)**: Created detailed README.md with step-by-step installation, deployment, and configuration instructions for GitHub repository
 
 # User Preferences
 
